@@ -1,27 +1,25 @@
 import uvicorn
 import os
 from fastapi import FastAPI
-
 from public.env import get_sys_plat
+from public.fastapi_app.cors import allow_cross_domain
 from public.fastapi_app.event import set_app_event
-from settings import FASTAPI_APPS, FASTAPI_HOST
+from settings import FASTAPI_APPS, FASTAPI_HOST, DEBUG
+from .routers import importer
 
-app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/error")
-async def error():
-    raise Exception()
+app = FastAPI(
+    debug=DEBUG,
+    title="知识库api",
+    description="知识库api",
+    version="0.1.0",
+)
+app.include_router(importer.router)
 
 
 class FastApiService:
     def start(self, sym):
         set_app_event(app, sym)
+        allow_cross_domain(app)
         plat = get_sys_plat()
         if plat == 'windows':
             service_name = os.path.dirname(os.path.realpath(__file__)).split('\\')[-1]
@@ -29,9 +27,4 @@ class FastApiService:
             service_name = os.path.dirname(os.path.realpath(__file__)).split('/')[-1]
         else:
             raise Exception(f'不支持的系统:{plat}')
-        uvicorn.run(app=f"app.{service_name}:app", host=FASTAPI_HOST, port=FASTAPI_APPS[service_name])
-
-
-if __name__ == '__main__':
-    service = FastApiService()
-    service.start()
+        uvicorn.run(app=f"app.{service_name}.main:app", host=FASTAPI_HOST, port=FASTAPI_APPS[service_name])

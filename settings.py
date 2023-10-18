@@ -8,5 +8,10 @@ LOG_PATH = os.path.dirname(os.path.realpath(__file__)) + '/logs'
 # 启用的fastapi app
 FASTAPI_HOST = '127.0.0.1'
 FASTAPI_APPS = {
-    'hello_world': 8080
+    # 'hello_world': 8080
+    'knowledge_repo': 8005,
 }
+ORIGINS = [
+    "*",
+]
+DEBUG = False

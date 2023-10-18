@@ -1,4 +1,3 @@
-import asyncio
 import multiprocessing
 import os
 import sys
@@ -9,7 +8,8 @@ from multiprocessing import Process
 from cmd.cmd_parser import parse_arguments
 from public import SystemInfo
 from public.env import get_num_cpu_cores
-from settings import LOG_FORMAT, LOG_LEVEL, FASTAPI_APPS, LOG_PATH
+import settings
+from settings import LOG_FORMAT, LOG_LEVEL, FASTAPI_APPS, LOG_PATH, DEBUG
 
 
 class VIPGptLaucher:
@@ -28,9 +28,10 @@ class VIPGptLaucher:
 
     def start(self):
         """开多个协程启动各个模块"""
-        import time
         import signal
         args = parse_arguments()
+        settings.DEBUG = args.debug
+
         processes = dict()
 
         def handler(signalname):
@@ -52,7 +53,7 @@ class VIPGptLaucher:
         START_SYM = multiprocessing.Event()
         for f_app in FASTAPI_APPS:
             self.logger.info(f'Try to load fastapi based app: {f_app}.')
-            service = importlib.import_module(f"app.{f_app}").FastApiService
+            service = importlib.import_module(f"app.{f_app}.main").FastApiService
             self.logger.info(f'{f_app} loading success.')
             process = Process(
                 target=service().start,
