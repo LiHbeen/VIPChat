@@ -6,8 +6,8 @@ from logging import handlers
 from multiprocessing import Process
 
 from cmd.cmd_parser import parse_arguments
-from public import SystemInfo
-from public.env import get_num_cpu_cores
+from internal import SystemInfo
+from internal.env import get_num_cpu_cores
 import settings
 from settings import LOG_FORMAT, LOG_LEVEL, FASTAPI_APPS, LOG_PATH, DEBUG
 

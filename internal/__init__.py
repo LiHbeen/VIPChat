@@ -1,4 +1,4 @@
-from public.env import get_python_version, get_sys_plat, get_fastapi_version, get_langchain_version
+from internal.env import get_python_version, get_sys_plat, get_fastapi_version, get_langchain_version
 
 
 class SystemInfo(object):

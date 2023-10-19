@@ -1,19 +1,19 @@
 from langchain.vectorstores import PGVector
 from sqlalchemy import text
 
-from public.knowledge_repo.cache.base import embedding_pool
-from public.knowledge_repo.common import knowledge_repo_path
-from public.knowledge_repo.service import KnowledgeRepoService, VectorStoreType
+from internal.knowledge_repo.cache.base import embedding_pool
+from internal.knowledge_repo.common import knowledge_repo_path
+from internal.knowledge_repo.data import KnowledgeRepoDataApi, VectorStoreType
 from langchain.embeddings.base import Embeddings
 from typing import List, Dict, Optional
 from langchain.docstore.document import Document
 
-from public.langchain.emb.base import EmbeddingsAdapter
+from internal.langchain.emb.base import EmbeddingsAdapter
 from settings import SCORE_THRESHOLD, DEVICE, REPO_CONFIG
 from langchain.vectorstores.pgvector import DistanceStrategy
 
 
-class GreenplumRepoService(KnowledgeRepoService):
+class GreenplumRepoDataApi(KnowledgeRepoDataApi):
     pg_vector: PGVector
 
     def vs_type(self) -> str:
@@ -65,7 +65,7 @@ class GreenplumRepoService(KnowledgeRepoService):
 
 
 if __name__ == '__main__':
-    repo_service = GreenplumRepoService(
+    repo_service = GreenplumRepoDataApi(
         repo_name='vip'
     )
     repo_service.do_create()

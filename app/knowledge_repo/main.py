@@ -1,9 +1,9 @@
 import uvicorn
 import os
 from fastapi import FastAPI
-from public.env import get_sys_plat
-from public.fastapi_app.cors import allow_cross_domain
-from public.fastapi_app.event import set_app_event
+from internal.env import get_sys_plat
+from internal.fastapi_setting.cors import allow_cross_domain
+from internal.fastapi_setting.event import set_app_event
 from settings import FASTAPI_APPS, FASTAPI_HOST, DEBUG
 from .routers import manager
 

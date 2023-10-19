@@ -7,14 +7,15 @@ from abc import abstractmethod
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 
-from public.knowledge_repo.common import knowledge_repo_path, docs_path
+from internal.knowledge_repo.common import knowledge_repo_path, docs_path
 
 
 class VectorStoreType(Enum):
     GREENPLUM = 'greenplum'
 
 
-class KnowledgeRepoService(abc.ABC):
+class KnowledgeRepoDataApi(abc.ABC):
+    """数据层接口"""
     def __init__(
         self, repo_name: str, embed_model: str = None, vector_name: str = "vector_store"
     ):
@@ -74,9 +75,9 @@ class KnowledgeRepoService(abc.ABC):
         pass
 
 
-class KnowledgeRepoServiceFactory:
+class KnowledgeRepoDataApiFactory:
     @classmethod
-    def build(cls, repo_name: str, vs_type: Union[str, VectorStoreType]) -> KnowledgeRepoService:
+    def build(cls, repo_name: str, vs_type: Union[str, VectorStoreType]) -> KnowledgeRepoDataApi:
         """
         :param repo_name: 知识库名字
         :param vs_type: 向量存储类型
@@ -85,8 +86,8 @@ class KnowledgeRepoServiceFactory:
         if isinstance(vs_type, str):
             vs_type = VectorStoreType(vs_type)
         if vs_type == VectorStoreType.GREENPLUM:
-            from public.knowledge_repo.service.greenplum_repo_service import GreenplumRepoService
-            return GreenplumRepoService(
+            from internal.knowledge_repo.data.greenplum_repo_data_api import GreenplumRepoDataApi
+            return GreenplumRepoDataApi(
                 repo_name
             )
         else:
