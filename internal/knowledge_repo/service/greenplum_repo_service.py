@@ -1,4 +1,5 @@
 from langchain.vectorstores import PGVector
+from sqlalchemy import text
 
 from public.knowledge_repo.cache.base import embedding_pool
 from public.knowledge_repo.common import knowledge_repo_path
@@ -32,7 +33,18 @@ class GreenplumRepoService(KnowledgeRepoService):
         pass
 
     def do_delete(self):
-        pass
+        """删除langchain.gpvector内部实现的相关表的数据"""
+        with self.pg_vector.connect() as connect:
+            connect.execute(text(f'''
+                    -- 删除 langchain_pg_embedding 表中关联到 langchain_pg_collection 表中 的记录
+                    DELETE FROM langchain_pg_embedding
+                    WHERE collection_id IN (
+                      SELECT uuid FROM langchain_pg_collection WHERE name = '{self.repo_name}'
+                    );
+                    -- 删除 langchain_pg_collection 表中 记录
+                    DELETE FROM langchain_pg_collection WHERE name = '{self.repo_name}';
+            '''))
+            connect.commit()
 
     def do_search(
         self,
@@ -41,6 +53,14 @@ class GreenplumRepoService(KnowledgeRepoService):
         score_threshold: float,
         embeddings: Embeddings,
     ) -> List[Document]:
+        pass
+
+    def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
+        ids = self.pg_vector.add_documents(docs)
+        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        return doc_infos
+
+    def do_delete_doc(self, kb_file, **kwargs):
         pass
 
 

@@ -1,7 +1,7 @@
 import abc
 import os
 from enum import Enum
-from typing import Union, List
+from typing import Union, List, Dict
 from abc import abstractmethod
 
 from langchain.embeddings.base import Embeddings
@@ -63,6 +63,14 @@ class KnowledgeRepoService(abc.ABC):
         """
         搜索知识库相关的文档片段
         """
+        pass
+
+    @abstractmethod
+    def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
+        pass
+
+    @abstractmethod
+    def do_delete_doc(self, kb_file, **kwargs):
         pass
 
 
