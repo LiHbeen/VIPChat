@@ -1,8 +1,4 @@
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.embeddings import HuggingFaceBgeEmbeddings
-from langchain.embeddings.base import Embeddings
-from langchain.schema import Document
 import threading
 from contextlib import contextmanager
 from collections import OrderedDict
@@ -109,6 +105,8 @@ class CachePool:
 
 
 class EmbeddingPool(CachePool):
+    single_lock = threading.RLock()
+
     def load(self, model: str = None, device: str = None):
         self.atomic.acquire()
         model = model or EMBEDDING_MODEL
@@ -120,7 +118,7 @@ class EmbeddingPool(CachePool):
             self.set(key, item)
             with item.acquire():
                 self.atomic.release()  # 同时间只有一个加载线程
-                embeddings = HuggingFaceBgeEmbeddings(
+                embeddings = HuggingFaceEmbeddings(
                     model_name=model,
                     model_kwargs={'device': device}
                 )
@@ -129,3 +127,13 @@ class EmbeddingPool(CachePool):
         else:
             self.atomic.release()
             return self.get(key).value
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        with cls.single_lock:
+            if not hasattr(cls, "_instance"):
+                cls._instance = cls(*args, **kwargs)
+        return cls._instance
+
+
+embedding_pool = EmbeddingPool.instance()

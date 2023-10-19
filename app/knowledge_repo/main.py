@@ -5,15 +5,16 @@ from public.env import get_sys_plat
 from public.fastapi_app.cors import allow_cross_domain
 from public.fastapi_app.event import set_app_event
 from settings import FASTAPI_APPS, FASTAPI_HOST, DEBUG
-from .routers import importer
+from .routers import manager
 
+VERSION = "0.1.0"
 app = FastAPI(
     debug=DEBUG,
     title="知识库api",
     description="知识库api",
-    version="0.1.0",
+    version=VERSION,
 )
-app.include_router(importer.router)
+app.include_router(manager.router)
 
 
 class FastApiService:
