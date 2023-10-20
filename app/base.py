@@ -9,6 +9,6 @@ class Code(Enum):
 
 
 class ResponseModel(BaseModel):
-    code: Code.value
+    code: Code
     data: dict = {}
     message: str = ''

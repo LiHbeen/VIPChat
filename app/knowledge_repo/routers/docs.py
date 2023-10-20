@@ -2,7 +2,7 @@ import os
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import List
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Form
 
 from app.base import ResponseModel, Code
 from internal.knowledge_repo.biz.docs_biz import DocsBizApi
@@ -16,13 +16,13 @@ router = APIRouter(
 )
 
 
-@router.get("/add", response_model=ResponseModel)
+@router.post("/add", response_model=ResponseModel)
 async def add(
     files: List[UploadFile],
-    repo_name: str,
-    override: bool,
-    chunk_size: int,
-    chunk_overlap: int,
+    repo_name: str = Form(),
+    override: bool = Form(),
+    chunk_size: int = Form(),
+    chunk_overlap: int = Form(),
 ) -> ResponseModel:
     """
     提交文档->分片->计算向量->存储
@@ -33,6 +33,17 @@ async def add(
     :param chunk_overlap: 知识库中相邻文本重合长度
     :return:
     """
+    files = [file for file in files if file.filename != '']
+    if len(files) == 0:
+        return ResponseModel(
+            code=Code.SUCCESS,
+            message='上传成功',
+            data={
+                'fail_upload_files': [],
+                'fail_vector_files': [],
+                'success_files': []
+            }
+        )
     docs_biz_api = DocsBizApi(repo_name, VS_TYPE, EMBEDDING_MODEL)
     validate_repo_name(repo_name)
     uploaded_files, fail_upload_files = batch_upload(files, repo_name, override)
@@ -45,12 +56,19 @@ async def add(
     #     chunk_overlap=chunk_overlap,
     # )
     # # fail_vector_files.update(result.data["failed_files"])
+    code = Code.SUCCESS if len(fail_upload_files) == 0 and len(fail_vector_files) == 0 else Code.FAIL
+    message = '上传成功' if len(fail_upload_files) == 0 and len(fail_vector_files) == 0 else '上传失败'
     return ResponseModel(
-        code=Code.SUCCESS,
-        message='上传成功',
+        code=code,
+        message=message,
         data={
             'fail_upload_files': fail_upload_files,
             'fail_vector_files': fail_vector_files,
+            'success_files': [
+                file.filename
+                for file in files
+                if file.filename not in fail_upload_files and file.filename not in fail_vector_files
+            ]
         }
     )
 
