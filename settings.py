@@ -17,15 +17,16 @@ ORIGINS = [
 DEBUG = False
 
 # knowledge repo
-KNOWLEDGE_PATH = os.path.dirname(os.path.realpath(__file__)) + '/knowledge_repo'
+KNOWLEDGE_PATH = os.path.dirname(os.path.realpath(__file__)) + '/LOCAL_REPO'
 if not os.path.isdir(KNOWLEDGE_PATH):
     os.mkdir(KNOWLEDGE_PATH)
-REPO_CONFIG = {
+# 向量存储库
+VS_CONFIG = {
     "pg": {
-        "connection_uri": "postgresql://fastgpt4399:205d649dff2ee998ae64f797bceb5e52@10.0.3.86:5432/postgres",
+        "connection_uri": "postgresql://fastgpt4399:205d649dff2ee998ae64f797bceb5e52@10.0.3.86:5432/vip_gpt_reply",
     }
 }
-
+DATABASE_URI = 'mysql+pymysql://ocss_admin:WkdKQWIyTnpjMTh5TURFMg@10.0.3.63:3306/vip_gpt_reply'
 # 深度学习
 MODEL_PATH = os.path.dirname(os.path.realpath(__file__)) + '/model_repo'
 if not os.path.isdir(MODEL_PATH):

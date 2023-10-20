@@ -1,15 +1,12 @@
 from langchain.vectorstores import PGVector
-from sqlalchemy import text
-
 from internal.knowledge_repo.cache.base import embedding_pool
-from internal.knowledge_repo.common import knowledge_repo_path
 from internal.knowledge_repo.data import KnowledgeRepoDataApi, VectorStoreType
 from langchain.embeddings.base import Embeddings
 from typing import List, Dict, Optional
 from langchain.docstore.document import Document
 
 from internal.langchain.emb.base import EmbeddingsAdapter
-from settings import SCORE_THRESHOLD, DEVICE, REPO_CONFIG
+from settings import SCORE_THRESHOLD, DEVICE, VS_CONFIG
 from langchain.vectorstores.pgvector import DistanceStrategy
 
 
@@ -25,17 +22,17 @@ class GreenplumRepoDataApi(KnowledgeRepoDataApi):
             embedding_function=EmbeddingsAdapter(embeddings),
             collection_name=self.repo_name,
             distance_strategy=DistanceStrategy.EUCLIDEAN,
-            connection_string=REPO_CONFIG.get("pg").get("connection_uri")
+            connection_string=VS_CONFIG.get("pg").get("connection_uri")
         )
 
-    def do_create(self):
-        """pgvector自动创建"""
+    def do_create_repo(self):
+        """pgvector使用greenplum，不需要创建，需要先安装vector扩展"""
         pass
 
     def do_delete(self):
         """删除langchain.gpvector内部实现的相关表的数据"""
         with self.pg_vector.connect() as connect:
-            connect.execute(text(f'''
+            connect.execute(f'''
                     -- 删除 langchain_pg_embedding 表中关联到 langchain_pg_collection 表中 的记录
                     DELETE FROM langchain_pg_embedding
                     WHERE collection_id IN (
@@ -43,7 +40,7 @@ class GreenplumRepoDataApi(KnowledgeRepoDataApi):
                     );
                     -- 删除 langchain_pg_collection 表中 记录
                     DELETE FROM langchain_pg_collection WHERE name = '{self.repo_name}';
-            '''))
+            ''')
             connect.commit()
 
     def do_search(
@@ -51,7 +48,6 @@ class GreenplumRepoDataApi(KnowledgeRepoDataApi):
         query: str,
         top_k: int,
         score_threshold: float,
-        embeddings: Embeddings,
     ) -> List[Document]:
         pass
 
@@ -61,11 +57,12 @@ class GreenplumRepoDataApi(KnowledgeRepoDataApi):
         return doc_infos
 
     def do_delete_doc(self, kb_file, **kwargs):
-        pass
+        with self.pg_vector.connect() as connect:
+            filepath = kb_file.filepath.replace('\\', '\\\\')
+            connect.execute(
+                    f''' DELETE FROM langchain_pg_embedding WHERE cmetadata::jsonb @> '{"source": "{filepath}"}'::jsonb;''')
+            connect.commit()
 
-
-if __name__ == '__main__':
-    repo_service = GreenplumRepoDataApi(
-        repo_name='vip'
-    )
-    repo_service.do_create()
+    def do_clear(self):
+        self.pg_vector.delete_collection()
+        self.pg_vector.create_collection()

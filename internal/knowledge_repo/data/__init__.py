@@ -8,6 +8,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 
 from internal.knowledge_repo.common import knowledge_repo_path, docs_path
+from settings import EMBEDDING_MODEL
 
 
 class VectorStoreType(Enum):
@@ -35,9 +36,9 @@ class KnowledgeRepoDataApi(abc.ABC):
         pass
 
     @abstractmethod
-    def do_create(self):
+    def do_create_repo(self):
         """
-        创建知识库
+        创建知识库向量存储库
         """
         pass
 
@@ -59,7 +60,6 @@ class KnowledgeRepoDataApi(abc.ABC):
         query: str,
         top_k: int,
         score_threshold: float,
-        embeddings: Embeddings,
     ) -> List[Document]:
         """
         搜索知识库相关的文档片段
@@ -74,10 +74,56 @@ class KnowledgeRepoDataApi(abc.ABC):
     def do_delete_doc(self, kb_file, **kwargs):
         pass
 
+    @abstractmethod
+    def do_clear(self):
+        pass
+
+    def create_repo(self):
+        """创建知识库"""
+        if not os.path.isdir(knowledge_repo_path(self.repo_name)):
+            os.mkdir(knowledge_repo_path(self.repo_name))
+        if not os.path.isdir(docs_path(self.repo_name)):
+            os.mkdir(docs_path(self.repo_name))
+        self.do_create_repo()
+
+    def search_docs(self):
+        """文档搜索"""
+        docs = self.do_search()
+        return docs
+
+    def clear_vs(self):
+        """清除相关表的所有数据"""
+        self.do_clear()
+
+    def delete_repo(self):
+        """删除知识库"""
+        pass
+
+    def add_doc(self):
+        pass
+
+    def delete_doc(self):
+        pass
+
+    def update_doc(self):
+        pass
+
+    def exist_doc(self):
+        pass
+
+    def count_file(self):
+        pass
+
+    def get_doc_by_id(self):
+        pass
+
+    def list_doc(self):
+        pass
+
 
 class KnowledgeRepoDataApiFactory:
     @classmethod
-    def build(cls, repo_name: str, vs_type: Union[str, VectorStoreType]) -> KnowledgeRepoDataApi:
+    def build(cls, repo_name: str, vs_type: Union[str, VectorStoreType], embed_model: str = EMBEDDING_MODEL) -> KnowledgeRepoDataApi:
         """
         :param repo_name: 知识库名字
         :param vs_type: 向量存储类型
@@ -88,7 +134,7 @@ class KnowledgeRepoDataApiFactory:
         if vs_type == VectorStoreType.GREENPLUM:
             from internal.knowledge_repo.data.greenplum_repo_data_api import GreenplumRepoDataApi
             return GreenplumRepoDataApi(
-                repo_name
+                repo_name=repo_name, embed_model=embed_model
             )
         else:
             raise ValueError(f'unsupported vector store `{vs_type}`.')
