@@ -13,4 +13,8 @@ def docs_path(repo_name):
 
 def validate_repo_name(repo_name):
     """True则验证通过"""
-    return '..' not in repo_name
+    if repo_name is None or repo_name.strip() == "":
+        return False
+    if '..' in repo_name:
+        return False
+    return True
