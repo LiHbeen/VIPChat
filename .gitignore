@@ -32,3 +32,4 @@ bin/
 *.swp
 __pycache__/
 LOCAL_REPO/
+settings.py
